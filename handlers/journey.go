@@ -10,9 +10,13 @@ import (
 	"thejourney/models"
 	"thejourney/repositories"
 
+	"context"
+	"fmt"
 	"os"
 	"time"
 
+	"github.com/cloudinary/cloudinary-go/v2"
+	"github.com/cloudinary/cloudinary-go/v2/api/uploader"
 	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v4"
 
@@ -73,7 +77,7 @@ func (h *handlerJourney) CreateJourney(w http.ResponseWriter, r *http.Request) {
 	
 	//get datafile ari middleware dan nyetor filename var disini,,
 	dataContex := r.Context().Value("dataFile") // add this code
-	filename := dataContex.(string) // add this code
+	filepath := dataContex.(string) // add this code
 	//get data user dari token ges yak
 	userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
 	userId := int(userInfo["id"].(float64))
@@ -84,7 +88,7 @@ func (h *handlerJourney) CreateJourney(w http.ResponseWriter, r *http.Request) {
 	request := journeydto.JourneyRequest{
 		Title		: r.FormValue("title"),
 		UserID		: userId,
-		Image		: filename,
+		// Image		: filepath,
 		Description	: r.FormValue("description"),
 	}
 
@@ -97,12 +101,28 @@ func (h *handlerJourney) CreateJourney(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Declare Context Background, Cloud Name, API Key, API Secret ...
+	var ctx = context.Background()
+	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+	var API_KEY = os.Getenv("API_KEY")
+	var API_SECRET = os.Getenv("API_SECRET")
+
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, filepath, uploader.UploadParams{Folder: "thejourney"});
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	CreatedAt := time.Now()
 
 	journey := models.Journey{
 		Title		: request.Title,
 		UserID		: userId,
-		Image		: filename,
+		Image		: resp.SecureURL,
 		CreatedAt: CreatedAt,
 		Description	: request.Description,
 		Message	: "success",
@@ -130,7 +150,7 @@ func (h *handlerJourney) UpdateJourney(w http.ResponseWriter, r *http.Request) {
 	// fmt.Println('test 1')
 	//get datafile ari middleware dan nyetor filename var disini,,
 	dataContex := r.Context().Value("dataFile") // add this code
-	filename := dataContex.(string) // add this code
+	filepath := dataContex.(string) // add this code
 	//get data user dari token ges yak
 	// userInfo := r.Context().Value("userInfo").(jwt.MapClaims)
 	// userId := int(userInfo["id"].(float64))
@@ -149,6 +169,22 @@ func (h *handlerJourney) UpdateJourney(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	
+	// Declare Context Background, Cloud Name, API Key, API Secret ...
+	var ctx = context.Background()
+	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+	var API_KEY = os.Getenv("API_KEY")
+	var API_SECRET = os.Getenv("API_SECRET")
+
+	// Add your Cloudinary credentials ...
+	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	// Upload file to Cloudinary ...
+	resp, err := cld.Upload.Upload(ctx, filepath, uploader.UploadParams{Folder: "thejourney"});
+
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+
 	UpdatedAt := time.Now()
 
 	journey, _ := h.JourneyRepository.GetJourney(int(id))
@@ -162,8 +198,8 @@ func (h *handlerJourney) UpdateJourney(w http.ResponseWriter, r *http.Request) {
 	if request.Title != "" {
 		journey.Title = request.Title
 	}
-	if filename != "false" {
-		journey.Image = filename
+	if filepath != "false" {
+		journey.Image = resp.SecureURL
 	}
 	if request.Description != "" {
 		journey.Description = request.Description
