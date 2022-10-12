@@ -41,9 +41,9 @@ func (h *handlerJourney) FindJourneys(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(err.Error())
 	}
 
-	for i, p := range journeys {
-	journeys[i].Image = os.Getenv("PATH_FILE") + p.Image
-	}
+	// for i, p := range journeys {
+	// journeys[i].Image = os.Getenv("PATH_FILE") + p.Image
+	// }
 
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Code: http.StatusOK, Data: journeys}
@@ -65,7 +65,7 @@ func (h *handlerJourney) GetJourney(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	journeys.Image = os.Getenv("PATH_FILE") + journeys.Image
+	// journeys.Image = os.Getenv("PATH_FILE") + journeys.Image
 
 	w.WriteHeader(http.StatusOK)
 	response := dto.SuccessResult{Code: http.StatusOK, Data: journeys}
